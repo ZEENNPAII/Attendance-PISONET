@@ -189,7 +189,7 @@ export default function RegisterPage() {
                 <input
                   id="pincode"
                   name="pincode"
-                  type="text"
+                  type="password"
                   required
                   maxLength={4}
                   value={formData.pincode}

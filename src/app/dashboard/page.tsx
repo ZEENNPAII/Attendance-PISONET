@@ -195,7 +195,7 @@ export default function PlayerDashboard() {
                     <div className="relative">
                       <input
                         id="pincode"
-                        type="text"
+                        type="password"
                         maxLength={4}
                         value={pincode}
                         onChange={(e) => setPincode(e.target.value)}
