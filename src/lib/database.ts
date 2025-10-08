@@ -1,7 +1,7 @@
 import { Database, Player, Reward } from '@/types';
 
-// In-memory database (in production, this would be replaced with a real database)
-let database: Database = {
+// Default database data
+const defaultDatabase: Database = {
   players: [
     {
       username: "kenth",
@@ -27,6 +27,31 @@ let database: Database = {
   ]
 };
 
+// Load database from localStorage or use default
+const loadDatabase = (): Database => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('attendance-database');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error('Error loading database from localStorage:', error);
+      }
+    }
+  }
+  return defaultDatabase;
+};
+
+// Save database to localStorage
+const saveDatabase = (db: Database): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('attendance-database', JSON.stringify(db));
+  }
+};
+
+// Initialize database with persistence
+let database: Database = loadDatabase();
+
 // Player management functions
 export const getPlayers = (): Player[] => {
   return database.players;
@@ -43,6 +68,7 @@ export const addPlayer = (player: Omit<Player, 'attendanceDays' | 'lastCheckIn'>
     lastCheckIn: ""
   };
   database.players.push(newPlayer);
+  saveDatabase(database);
 };
 
 export const updatePlayer = (username: string, updates: Partial<Player>): boolean => {
@@ -50,6 +76,7 @@ export const updatePlayer = (username: string, updates: Partial<Player>): boolea
   if (playerIndex === -1) return false;
   
   database.players[playerIndex] = { ...database.players[playerIndex], ...updates };
+  saveDatabase(database);
   return true;
 };
 
@@ -87,6 +114,7 @@ export const addReward = (reward: Omit<Reward, 'id'>): void => {
     id: Date.now().toString()
   };
   database.rewards.push(newReward);
+  saveDatabase(database);
 };
 
 export const updateReward = (id: string, updates: Partial<Reward>): boolean => {
@@ -94,6 +122,7 @@ export const updateReward = (id: string, updates: Partial<Reward>): boolean => {
   if (rewardIndex === -1) return false;
   
   database.rewards[rewardIndex] = { ...database.rewards[rewardIndex], ...updates };
+  saveDatabase(database);
   return true;
 };
 
@@ -102,6 +131,7 @@ export const deleteReward = (id: string): boolean => {
   if (rewardIndex === -1) return false;
   
   database.rewards.splice(rewardIndex, 1);
+  saveDatabase(database);
   return true;
 };
 
