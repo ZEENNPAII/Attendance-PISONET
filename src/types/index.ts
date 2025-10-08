@@ -4,6 +4,7 @@ export interface Player {
   pincode: string;
   attendanceDays: number;
   lastCheckIn: string;
+  deleted?: boolean;
   socials: {
     facebook: string;
     instagram: string;

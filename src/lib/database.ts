@@ -70,7 +70,8 @@ export const getPlayers = (): Player[] => {
   if (typeof window !== 'undefined') {
     database = loadDatabase();
   }
-  return database.players;
+  // Filter out soft-deleted players
+  return database.players.filter(player => !player.deleted);
 };
 
 export const getPlayerByUsername = (username: string): Player | undefined => {
@@ -94,6 +95,21 @@ export const updatePlayer = (username: string, updates: Partial<Player>): boolea
   database.players[playerIndex] = { ...database.players[playerIndex], ...updates };
   saveDatabase(database);
   return true;
+};
+
+// Soft delete player (mark as deleted but keep in database)
+export const softDeletePlayer = (username: string): boolean => {
+  return updatePlayer(username, { deleted: true });
+};
+
+// Restore soft-deleted player
+export const restorePlayer = (username: string): boolean => {
+  return updatePlayer(username, { deleted: false });
+};
+
+// Update player password and pincode
+export const updatePlayerCredentials = (username: string, password: string, pincode: string): boolean => {
+  return updatePlayer(username, { password, pincode });
 };
 
 export const checkInPlayer = (username: string, pincode: string): { success: boolean; message: string } => {

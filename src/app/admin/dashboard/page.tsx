@@ -23,7 +23,9 @@ import {
   getRewards, 
   updatePlayer,
   redeemReward,
-  refreshDatabase
+  refreshDatabase,
+  softDeletePlayer,
+  updatePlayerCredentials
 } from '@/lib/database';
 import { Player, Reward } from '@/types';
 import Leaderboard from '@/components/Leaderboard';
@@ -35,6 +37,11 @@ export default function AdminDashboard() {
   const [leaderboard, setLeaderboard] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [editForm, setEditForm] = useState({
+    password: '',
+    pincode: ''
+  });
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -71,6 +78,53 @@ export default function AdminDashboard() {
       setRewards(getRewards());
       setMessage('Reward marked as claimed');
     }
+  };
+
+  const handleSoftDeletePlayer = (username: string) => {
+    if (window.confirm(`Are you sure you want to delete ${username}? This action can be undone.`)) {
+      const success = softDeletePlayer(username);
+      if (success) {
+        loadData();
+        setMessage(`${username} has been deleted`);
+      }
+    }
+  };
+
+  const handleEditPlayer = (player: Player) => {
+    setEditingPlayer(player);
+    setEditForm({
+      password: '',
+      pincode: ''
+    });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPlayer) return;
+
+    if (!editForm.password || !editForm.pincode) {
+      setMessage('Please fill in both password and pincode');
+      return;
+    }
+
+    if (editForm.pincode.length !== 4) {
+      setMessage('Pincode must be exactly 4 digits');
+      return;
+    }
+
+    const success = updatePlayerCredentials(editingPlayer.username, editForm.password, editForm.pincode);
+    if (success) {
+      setMessage(`${editingPlayer.username}'s credentials have been updated`);
+      setEditingPlayer(null);
+      loadData();
+    } else {
+      setMessage('Failed to update credentials');
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingPlayer(null);
+    setEditForm({ password: '', pincode: '' });
   };
 
   const handleLogout = () => {
@@ -253,12 +307,26 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() => handleResetAttendance(player.username)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              Reset Attendance
-                            </button>
+                            <div className="flex flex-col space-y-1">
+                              <button
+                                onClick={() => handleResetAttendance(player.username)}
+                                className="text-red-600 hover:text-red-700 text-xs"
+                              >
+                                Reset Attendance
+                              </button>
+                              <button
+                                onClick={() => handleEditPlayer(player)}
+                                className="text-blue-600 hover:text-blue-700 text-xs"
+                              >
+                                Edit Credentials
+                              </button>
+                              <button
+                                onClick={() => handleSoftDeletePlayer(player.username)}
+                                className="text-orange-600 hover:text-orange-700 text-xs"
+                              >
+                                Delete Player
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -323,6 +391,66 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Edit Player Modal */}
+      {editingPlayer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Edit {editingPlayer.username}&apos;s Credentials
+            </h3>
+            
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
+                  className="input-field"
+                  placeholder="Enter new password"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 mb-1">
+                  New 4-Digit Pincode
+                </label>
+                <input
+                  type="password"
+                  id="pincode"
+                  value={editForm.pincode}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, pincode: e.target.value }))}
+                  className="input-field"
+                  placeholder="1234"
+                  maxLength={4}
+                  required
+                />
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="submit"
+                  className="btn-primary flex-1"
+                >
+                  Update Credentials
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEditCancel}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
