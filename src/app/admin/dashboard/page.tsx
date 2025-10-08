@@ -14,7 +14,11 @@ import {
   Music,
   Calendar,
   RefreshCw,
-  CheckCircle
+  CheckCircle,
+  Edit,
+  Trash2,
+  RotateCcw,
+  History
 } from 'lucide-react';
 import { getCurrentUser, logout, isAdmin } from '@/lib/auth';
 import { 
@@ -25,7 +29,9 @@ import {
   redeemReward,
   refreshDatabase,
   softDeletePlayer,
-  updatePlayerCredentials
+  updatePlayerCredentials,
+  getDeletedPlayers,
+  restorePlayer
 } from '@/lib/database';
 import { Player, Reward } from '@/types';
 import Leaderboard from '@/components/Leaderboard';
@@ -35,6 +41,7 @@ export default function AdminDashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [leaderboard, setLeaderboard] = useState<Player[]>([]);
+  const [deletedPlayers, setDeletedPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
@@ -60,6 +67,7 @@ export default function AdminDashboard() {
     setPlayers(getPlayers());
     setRewards(getRewards());
     setLeaderboard(getLeaderboard());
+    setDeletedPlayers(getDeletedPlayers());
   };
 
   const handleResetAttendance = (username: string) => {
@@ -125,6 +133,16 @@ export default function AdminDashboard() {
   const handleEditCancel = () => {
     setEditingPlayer(null);
     setEditForm({ password: '', pincode: '' });
+  };
+
+  const handleRestorePlayer = (username: string) => {
+    if (window.confirm(`Are you sure you want to restore ${username}?`)) {
+      const success = restorePlayer(username);
+      if (success) {
+        loadData();
+        setMessage(`${username} has been restored`);
+      }
+    }
   };
 
   const handleLogout = () => {
@@ -307,24 +325,27 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <div className="flex flex-col space-y-1">
+                            <div className="flex space-x-2">
                               <button
                                 onClick={() => handleResetAttendance(player.username)}
-                                className="text-red-600 hover:text-red-700 text-xs"
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+                                title="Reset Attendance"
                               >
-                                Reset Attendance
+                                <RotateCcw className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleEditPlayer(player)}
-                                className="text-blue-600 hover:text-blue-700 text-xs"
+                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                title="Edit Credentials"
                               >
-                                Edit Credentials
+                                <Edit className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleSoftDeletePlayer(player.username)}
-                                className="text-orange-600 hover:text-orange-700 text-xs"
+                                className="p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded"
+                                title="Delete Player"
                               >
-                                Delete Player
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
@@ -390,6 +411,109 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* History Section - Deleted Players */}
+        {deletedPlayers.length > 0 && (
+          <div className="mt-8">
+            <div className="card">
+              <div className="flex items-center mb-6">
+                <History className="h-6 w-6 text-gray-600 mr-2" />
+                <h2 className="text-xl font-semibold text-gray-900">History (Deleted Players)</h2>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Player
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Attendance
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Last Check-in
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Social Media
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {deletedPlayers.map((player) => (
+                      <tr key={player.username} className="opacity-60">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {player.username}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-bold text-primary-600">
+                            {player.attendanceDays} days
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {player.lastCheckIn || 'Never'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex space-x-2">
+                            {player.socials.facebook && (
+                              <a
+                                href={player.socials.facebook}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Facebook className="h-4 w-4" />
+                              </a>
+                            )}
+                            {player.socials.instagram && (
+                              <a
+                                href={player.socials.instagram}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-pink-600 hover:text-pink-700"
+                              >
+                                <Instagram className="h-4 w-4" />
+                              </a>
+                            )}
+                            {player.socials.tiktok && (
+                              <a
+                                href={player.socials.tiktok}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-800 hover:text-gray-900"
+                              >
+                                <Music className="h-4 w-4" />
+                              </a>
+                            )}
+                            {!player.socials.facebook && !player.socials.instagram && !player.socials.tiktok && (
+                              <span className="text-gray-400 text-xs">No links</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleRestorePlayer(player.username)}
+                              className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded"
+                              title="Restore Player"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Edit Player Modal */}

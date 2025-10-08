@@ -112,6 +112,16 @@ export const updatePlayerCredentials = (username: string, password: string, pinc
   return updatePlayer(username, { password, pincode });
 };
 
+// Get soft-deleted players for history
+export const getDeletedPlayers = (): Player[] => {
+  // Refresh database from localStorage on each call
+  if (typeof window !== 'undefined') {
+    database = loadDatabase();
+  }
+  // Return only soft-deleted players
+  return database.players.filter(player => player.deleted);
+};
+
 export const checkInPlayer = (username: string, pincode: string): { success: boolean; message: string } => {
   const player = getPlayerByUsername(username);
   if (!player) {
@@ -177,7 +187,10 @@ export const getLeaderboard = (limit?: number): Player[] => {
   if (typeof window !== 'undefined') {
     database = loadDatabase();
   }
-  const sortedPlayers = [...database.players].sort((a, b) => b.attendanceDays - a.attendanceDays);
+  // Filter out soft-deleted players and sort by attendance
+  const sortedPlayers = [...database.players]
+    .filter(player => !player.deleted)
+    .sort((a, b) => b.attendanceDays - a.attendanceDays);
   return limit ? sortedPlayers.slice(0, limit) : sortedPlayers;
 };
 
