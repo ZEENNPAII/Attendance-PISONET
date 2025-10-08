@@ -59,7 +59,7 @@ export default function LoginPage() {
             Player Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your Daily Redeem account
+            Sign in to your LCP PISO NET account
           </p>
         </div>
 

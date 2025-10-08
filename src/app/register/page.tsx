@@ -105,7 +105,7 @@ export default function RegisterPage() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join the Daily Redeem Attendance System
+            Join the LCP PISO NET Attendance System
           </p>
         </div>
 

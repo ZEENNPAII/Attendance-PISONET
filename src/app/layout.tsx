@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Daily Redeem Attendance System',
+  title: 'LCP PISO NET Attendance System',
   description: 'A gamified attendance system with rewards and leaderboards',
 }
 

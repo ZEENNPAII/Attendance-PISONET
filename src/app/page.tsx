@@ -12,7 +12,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <Trophy className="h-8 w-8 text-primary-600 mr-2" />
-              <h1 className="text-2xl font-bold text-gray-900">Daily Redeem</h1>
+              <h1 className="text-2xl font-bold text-gray-900">LCP PISO NET</h1>
             </div>
             <div className="flex space-x-4">
               <Link href="/login" className="btn-primary">
@@ -30,7 +30,7 @@ export default function HomePage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Daily Redeem
+            LCP PISO NET
             <span className="text-primary-600"> Attendance System</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
@@ -126,7 +126,7 @@ export default function HomePage() {
       <footer className="bg-white border-t mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
-            <p>&copy; 2025 Daily Redeem Attendance System. Built with Next.js & TailwindCSS.</p>
+            <p>&copy; 2025 LCP PISO NET Attendance System. Built with Next.js & TailwindCSS.</p>
           </div>
         </div>
       </footer>

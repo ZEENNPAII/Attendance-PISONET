@@ -1,4 +1,4 @@
-# Daily Redeem Attendance System
+# LCP PISO NET Attendance System
 
 A gamified attendance system built with Next.js, TypeScript, and TailwindCSS. Players can check in daily, earn rewards, and compete on leaderboards.
 
