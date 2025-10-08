@@ -39,58 +39,77 @@ export default function PlayerDashboard() {
   const [isEditingSocials, setIsEditingSocials] = useState(false);
   const [socials, setSocials] = useState({ facebook: '', instagram: '', tiktok: '' });
   const [isLoading, setIsLoading] = useState(true);
+  const [availableRewards, setAvailableRewards] = useState<Reward[]>([]);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser || !isPlayer()) {
-      router.push('/login');
-      return;
-    }
+    const loadData = async () => {
+      const currentUser = getCurrentUser();
+      if (!currentUser || !isPlayer()) {
+        router.push('/login');
+        return;
+      }
 
-    const playerData = getPlayerByUsername(currentUser.username);
-    if (!playerData) {
-      router.push('/login');
-      return;
-    }
+      try {
+        const playerData = await getPlayerByUsername(currentUser.username);
+        if (!playerData) {
+          router.push('/login');
+          return;
+        }
 
-    setPlayer(playerData);
-    setSocials(playerData.socials);
-    setRewards(getRewards());
-    setLeaderboard(getLeaderboard(5));
-    setIsLoading(false);
+        const [rewardsData, leaderboardData, availableRewardsData] = await Promise.all([
+          getRewards(),
+          getLeaderboard(5),
+          getAvailableRewards(playerData.attendanceDays)
+        ]);
+
+        setPlayer(playerData);
+        setSocials(playerData.socials);
+        setRewards(rewardsData);
+        setLeaderboard(leaderboardData);
+        setAvailableRewards(availableRewardsData);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [router]);
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (!player || !pincode) return;
 
-    const result = checkInPlayer(player.username, pincode);
+    const result = await checkInPlayer(player.username, pincode);
     setCheckInMessage(result.message);
 
     if (result.success) {
       // Refresh player data
-      const updatedPlayer = getPlayerByUsername(player.username);
+      const updatedPlayer = await getPlayerByUsername(player.username);
       if (updatedPlayer) {
         setPlayer(updatedPlayer);
-        setLeaderboard(getLeaderboard(5));
+        const updatedLeaderboard = await getLeaderboard(5);
+        setLeaderboard(updatedLeaderboard);
       }
       setPincode('');
     }
   };
 
-  const handleRedeemReward = (rewardId: string) => {
-    const success = redeemReward(rewardId);
+  const handleRedeemReward = async (rewardId: string) => {
+    const success = await redeemReward(rewardId);
     if (success) {
-      setRewards(getRewards());
+      const updatedRewards = await getRewards();
+      setRewards(updatedRewards);
       setCheckInMessage('Reward redeemed successfully!');
     }
   };
 
-  const handleUpdateSocials = () => {
+  const handleUpdateSocials = async () => {
     if (!player) return;
 
-    const success = updatePlayer(player.username, { socials });
+    const success = await updatePlayer(player.username, { socials });
     if (success) {
-      const updatedPlayer = getPlayerByUsername(player.username);
+      const updatedPlayer = await getPlayerByUsername(player.username);
       if (updatedPlayer) {
         setPlayer(updatedPlayer);
       }
@@ -121,7 +140,6 @@ export default function PlayerDashboard() {
 
   const today = new Date().toISOString().split('T')[0];
   const hasCheckedInToday = player.lastCheckIn === today;
-  const availableRewards = getAvailableRewards(player.attendanceDays);
 
   return (
     <div className="min-h-screen bg-gray-50">

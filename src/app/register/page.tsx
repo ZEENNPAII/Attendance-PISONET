@@ -30,15 +30,18 @@ export default function RegisterPage() {
     }
   };
 
-  const validateForm = () => {
+  const validateForm = async () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
-    } else if (getPlayerByUsername(formData.username)) {
-      newErrors.username = 'Username already exists';
+    } else {
+      const existingPlayer = await getPlayerByUsername(formData.username);
+      if (existingPlayer) {
+        newErrors.username = 'Username already exists';
+      }
     }
 
     if (!formData.password) {
@@ -64,13 +67,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    const isValid = await validateForm();
+    if (!isValid) return;
 
     setIsLoading(true);
     
     try {
       // Add player to database
-      addPlayer({
+      const success = await addPlayer({
         username: formData.username,
         password: formData.password,
         pincode: formData.pincode,
@@ -81,11 +85,15 @@ export default function RegisterPage() {
         }
       });
 
-      // Auto-login the user
-      loginPlayer(formData.username, formData.password);
-      
-      // Redirect to dashboard
-      router.push('/dashboard');
+      if (success) {
+        // Auto-login the user
+        await loginPlayer(formData.username, formData.password);
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        setErrors({ general: 'Registration failed. Please try again.' });
+      }
     } catch (error) {
       console.error('Registration error:', error);
       setErrors({ general: 'Registration failed. Please try again.' });

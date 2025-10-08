@@ -4,8 +4,9 @@ import { authenticatePlayer, authenticateAdmin } from './database';
 // Simple session management (in production, use proper session management)
 let currentUser: AuthUser | null = null;
 
-export const loginPlayer = (username: string, password: string): boolean => {
-  if (authenticatePlayer(username, password)) {
+export const loginPlayer = async (username: string, password: string): Promise<boolean> => {
+  const isAuthenticated = await authenticatePlayer(username, password);
+  if (isAuthenticated) {
     currentUser = { username, role: 'player' };
     return true;
   }

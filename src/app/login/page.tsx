@@ -33,7 +33,7 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const success = loginPlayer(formData.username, formData.password);
+      const success = await loginPlayer(formData.username, formData.password);
       
       if (success) {
         router.push('/dashboard');

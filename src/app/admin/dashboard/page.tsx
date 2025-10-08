@@ -58,41 +58,54 @@ export default function AdminDashboard() {
     }
 
     loadData();
-    setIsLoading(false);
   }, [router]);
 
-  const loadData = () => {
-    // Refresh database from localStorage first
-    refreshDatabase();
-    setPlayers(getPlayers());
-    setRewards(getRewards());
-    setLeaderboard(getLeaderboard());
-    setDeletedPlayers(getDeletedPlayers());
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [playersData, rewardsData, leaderboardData, deletedPlayersData] = await Promise.all([
+        getPlayers(),
+        getRewards(),
+        getLeaderboard(10),
+        getDeletedPlayers()
+      ]);
+      
+      setPlayers(playersData);
+      setRewards(rewardsData);
+      setLeaderboard(leaderboardData);
+      setDeletedPlayers(deletedPlayersData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setMessage('Error loading data. Please refresh the page.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResetAttendance = (username: string) => {
+  const handleResetAttendance = async (username: string) => {
     if (window.confirm(`Are you sure you want to reset ${username}&apos;s attendance?`)) {
-      const success = updatePlayer(username, { attendanceDays: 0, lastCheckIn: '' });
+      const success = await updatePlayer(username, { attendanceDays: 0, lastCheckIn: '' });
       if (success) {
-        loadData();
+        await loadData();
         setMessage(`${username}&apos;s attendance has been reset`);
       }
     }
   };
 
-  const handleMarkRewardClaimed = (rewardId: string) => {
-    const success = redeemReward(rewardId);
+  const handleMarkRewardClaimed = async (rewardId: string) => {
+    const success = await redeemReward(rewardId);
     if (success) {
-      setRewards(getRewards());
+      const updatedRewards = await getRewards();
+      setRewards(updatedRewards);
       setMessage('Reward marked as claimed');
     }
   };
 
-  const handleSoftDeletePlayer = (username: string) => {
+  const handleSoftDeletePlayer = async (username: string) => {
     if (window.confirm(`Are you sure you want to delete ${username}? This action can be undone.`)) {
-      const success = softDeletePlayer(username);
+      const success = await softDeletePlayer(username);
       if (success) {
-        loadData();
+        await loadData();
         setMessage(`${username} has been deleted`);
       }
     }
@@ -106,7 +119,7 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPlayer) return;
 
@@ -120,11 +133,11 @@ export default function AdminDashboard() {
       return;
     }
 
-    const success = updatePlayerCredentials(editingPlayer.username, editForm.password, editForm.pincode);
+    const success = await updatePlayerCredentials(editingPlayer.username, editForm.password, editForm.pincode);
     if (success) {
       setMessage(`${editingPlayer.username}'s credentials have been updated`);
       setEditingPlayer(null);
-      loadData();
+      await loadData();
     } else {
       setMessage('Failed to update credentials');
     }
@@ -135,11 +148,11 @@ export default function AdminDashboard() {
     setEditForm({ password: '', pincode: '' });
   };
 
-  const handleRestorePlayer = (username: string) => {
+  const handleRestorePlayer = async (username: string) => {
     if (window.confirm(`Are you sure you want to restore ${username}?`)) {
-      const success = restorePlayer(username);
+      const success = await restorePlayer(username);
       if (success) {
-        loadData();
+        await loadData();
         setMessage(`${username} has been restored`);
       }
     }

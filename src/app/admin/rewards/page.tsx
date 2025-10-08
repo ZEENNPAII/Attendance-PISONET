@@ -48,8 +48,9 @@ export default function AdminRewardsPage() {
     setIsLoading(false);
   }, [router]);
 
-  const loadRewards = () => {
-    setRewards(getRewards());
+  const loadRewards = async () => {
+    const rewardsData = await getRewards();
+    setRewards(rewardsData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -68,7 +69,7 @@ export default function AdminRewardsPage() {
     setEditingReward(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.description || !formData.requiredDays || !formData.redeemDate) {
@@ -78,7 +79,7 @@ export default function AdminRewardsPage() {
 
     if (editingReward) {
       // Update existing reward
-      const success = updateReward(editingReward.id, {
+      const success = await updateReward(editingReward.id, {
         name: formData.name,
         description: formData.description,
         requiredDays: parseInt(formData.requiredDays),
@@ -87,23 +88,27 @@ export default function AdminRewardsPage() {
       
       if (success) {
         setMessage('Reward updated successfully');
-        loadRewards();
+        await loadRewards();
         resetForm();
       } else {
         setMessage('Failed to update reward');
       }
     } else {
       // Add new reward
-      addReward({
+      const success = await addReward({
         name: formData.name,
         description: formData.description,
         requiredDays: parseInt(formData.requiredDays),
         redeemDate: formData.redeemDate
       });
       
-      setMessage('Reward added successfully');
-      loadRewards();
-      resetForm();
+      if (success) {
+        setMessage('Reward added successfully');
+        await loadRewards();
+        resetForm();
+      } else {
+        setMessage('Failed to add reward');
+      }
     }
   };
 
@@ -118,12 +123,12 @@ export default function AdminRewardsPage() {
     setShowAddForm(true);
   };
 
-  const handleDelete = (rewardId: string) => {
+  const handleDelete = async (rewardId: string) => {
     if (window.confirm('Are you sure you want to delete this reward?')) {
-      const success = deleteReward(rewardId);
+      const success = await deleteReward(rewardId);
       if (success) {
         setMessage('Reward deleted successfully');
-        loadRewards();
+        await loadRewards();
       } else {
         setMessage('Failed to delete reward');
       }
