@@ -53,11 +53,11 @@ export default function AdminDashboard() {
   };
 
   const handleResetAttendance = (username: string) => {
-    if (window.confirm(`Are you sure you want to reset ${username}'s attendance?`)) {
+    if (window.confirm(`Are you sure you want to reset ${username}&apos;s attendance?`)) {
       const success = updatePlayer(username, { attendanceDays: 0, lastCheckIn: '' });
       if (success) {
         loadData();
-        setMessage(`${username}'s attendance has been reset`);
+        setMessage(`${username}&apos;s attendance has been reset`);
       }
     }
   };
