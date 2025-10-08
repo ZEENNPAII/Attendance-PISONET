@@ -154,7 +154,7 @@ export default function AdminDashboard() {
             <p className="text-2xl font-bold text-gray-900">
               {players.filter(p => p.lastCheckIn === new Date().toISOString().split('T')[0]).length}
             </p>
-            <p className="text-gray-600">Today's Check-ins</p>
+            <p className="text-gray-600">Today&apos;s Check-ins</p>
           </div>
         </div>
 
