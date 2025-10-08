@@ -50,10 +50,26 @@ const saveDatabase = (db: Database): void => {
 };
 
 // Initialize database with persistence
-let database: Database = loadDatabase();
+let database: Database = defaultDatabase;
+
+// Load database from localStorage on client side
+if (typeof window !== 'undefined') {
+  database = loadDatabase();
+}
+
+// Function to refresh database from localStorage
+export const refreshDatabase = (): void => {
+  if (typeof window !== 'undefined') {
+    database = loadDatabase();
+  }
+};
 
 // Player management functions
 export const getPlayers = (): Player[] => {
+  // Refresh database from localStorage on each call
+  if (typeof window !== 'undefined') {
+    database = loadDatabase();
+  }
   return database.players;
 };
 
@@ -105,6 +121,10 @@ export const checkInPlayer = (username: string, pincode: string): { success: boo
 
 // Reward management functions
 export const getRewards = (): Reward[] => {
+  // Refresh database from localStorage on each call
+  if (typeof window !== 'undefined') {
+    database = loadDatabase();
+  }
   return database.rewards;
 };
 
@@ -137,6 +157,10 @@ export const deleteReward = (id: string): boolean => {
 
 // Leaderboard functions
 export const getLeaderboard = (limit?: number): Player[] => {
+  // Refresh database from localStorage on each call
+  if (typeof window !== 'undefined') {
+    database = loadDatabase();
+  }
   const sortedPlayers = [...database.players].sort((a, b) => b.attendanceDays - a.attendanceDays);
   return limit ? sortedPlayers.slice(0, limit) : sortedPlayers;
 };

@@ -22,7 +22,8 @@ import {
   getLeaderboard, 
   getRewards, 
   updatePlayer,
-  redeemReward
+  redeemReward,
+  refreshDatabase
 } from '@/lib/database';
 import { Player, Reward } from '@/types';
 import Leaderboard from '@/components/Leaderboard';
@@ -47,6 +48,8 @@ export default function AdminDashboard() {
   }, [router]);
 
   const loadData = () => {
+    // Refresh database from localStorage first
+    refreshDatabase();
     setPlayers(getPlayers());
     setRewards(getRewards());
     setLeaderboard(getLeaderboard());
